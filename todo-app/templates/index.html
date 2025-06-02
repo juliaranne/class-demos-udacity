@@ -6,6 +6,12 @@
     <title>Todo app</title>
   </head>
   <body>
+    <form method="post" action="/todos/create">
+      <label>Add todo
+        <input name="description" type="text" />
+        <button>Create</button>
+      </label>
+    </form>
     <ul>
       {% for d in data %}
       <li>{{d.description}}</li>
