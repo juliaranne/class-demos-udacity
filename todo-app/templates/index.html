@@ -8,6 +8,11 @@
       .hidden {
         display: none;
       }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
     </style>
   </head>
   <body>
@@ -21,11 +26,60 @@
     </form>
     <ul id="todo">
       {% for d in data %}
-      <li>{{d.description}}</li>
+      <li>
+        <input type="checkbox" data-id="{{ d.id }}" {% if d.completed %} checked {% endif %} />{{d.description}} <button data-id="{{ d.id }}">Delete</button>
+      </li>
       {% endfor %}
     </ul>
   </body>
   <script>
+    // delete
+    const deleteBtn = document.querySelectorAll(
+      '#todo button'
+    );
+    for (let j = 0; j < deleteBtn.length; j += 1) {
+      const btn = deleteBtn[j];
+      btn.onclick = (e) => {
+        fetch("/todos/" + e.target.dataset.id, {
+          method: 'DELETE',
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then(function () {
+          document.getElementById("error").className = "hidden";
+        })
+        .catch(function () {
+          document.getElementById("error").className = "";
+        });
+      };
+    }
+    // update completed
+    const checkboxes = document.querySelectorAll(
+      '#todo input[type="checkbox"]'
+    );
+    for (let i = 0; i < checkboxes.length; i += 1) {
+      const checkbox = checkboxes[i];
+      checkbox.onchange = (e) => {
+        const newCompletedState = e.target.checked;
+        fetch("/todos/" + e.target.dataset.id + "/set-completed", {
+          method: "POST",
+          body: JSON.stringify({
+            completed: newCompletedState,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+        .then(function () {
+          document.getElementById("error").className = "hidden";
+        })
+        .catch(function () {
+          document.getElementById("error").className = "";
+        });
+      };
+    }
+    // Add todo
     document.getElementById("form").onsubmit = function (e) {
       e.preventDefault();
       fetch("/todos/create", {
