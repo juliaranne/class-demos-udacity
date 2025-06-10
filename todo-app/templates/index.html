@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo app</title>
     <style>
+      body {
+        display: flex;
+      }
       .hidden {
         display: none;
       }
@@ -13,14 +16,35 @@
         padding: 0;
         margin: 0;
       }
+      section {
+        margin-right: 20px;
+      }
     </style>
   </head>
   <body>
     <p id="error" class="hidden">Something went wrong</p>
+    <section>
+      <form id="create_list">
+        <label
+          >Create list
+          <input name="name" id="list_name" type="text" />
+          <button>Create</button>
+        </label>
+      </form>
+    <ul id="todoLists">
+      {% for l in lists %}
+      <li>
+        <a href="/lists/{{l.id}}">{{l.name}}</a> <button data-id="{{ l.id }}">Delete</button>
+      </li>
+      {% endfor %}
+    </ul>
+    </section>
+    <section>
     <form id="form">
       <label
         >Add todo
         <input name="description" id="description" type="text" />
+        <input id="list_id" type="hidden" value="{{ active_list.id }}">
         <button>Create</button>
       </label>
     </form>
@@ -31,6 +55,7 @@
       </li>
       {% endfor %}
     </ul>
+    </section>
   </body>
   <script>
     // delete
@@ -86,6 +111,7 @@
         method: "POST",
         body: JSON.stringify({
           description: document.getElementById("description").value,
+          list_id: document.getElementById('list_id').value
         }),
         headers: { "Content-Type": "application/json" },
       })
@@ -98,6 +124,30 @@
           document.getElementById("todo").appendChild(liItem);
           document.getElementById("error").className = "hidden";
           document.getElementById("description").value = "";
+        })
+        .catch(function () {
+          document.getElementById("error").className = "";
+        });
+    };
+     // Add list
+     document.getElementById("create_list").onsubmit = function (e) {
+      e.preventDefault();
+      fetch("/list/create", {
+        method: "POST",
+        body: JSON.stringify({
+          name: document.getElementById("list_name").value,
+        }),
+        headers: { "Content-Type": "application/json" },
+      })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (jsonresponse) {
+          const liItem = document.createElement("LI");
+          liItem.innerHTML = jsonresponse["name"];
+          document.getElementById("todoLists").appendChild(liItem);
+          document.getElementById("error").className = "hidden";
+          document.getElementById("list_name").value = "";
         })
         .catch(function () {
           document.getElementById("error").className = "";

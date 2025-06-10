@@ -35,10 +35,13 @@ def create_todo():
   body = {}
   try:
     description = request.get_json()['description']
-    todo = Todo(description=description)
+    list_id = request.get_json()['list_id']
+    todo = Todo(description=description, complete=False, list_id=list_id)
     db.session.add(todo)
     db.session.commit()
     body['description'] = todo.description
+    body['id'] = todo.id
+    body['complete'] = todo.complete
   except:
     error = True
     db.session.rollback()
@@ -74,9 +77,33 @@ def delete_todo(todo_id):
     db.session.close()
   return jsonify({ 'success': True })
 
+@app.route('/list/create', methods=['POST'])
+def create_list():
+  error = False
+  body = {}
+  try:
+    name = request.get_json()['name']
+    todoList = TodoList(name=name)
+    db.session.add(todoList)
+    db.session.commit()
+    body['name'] = todoList.name
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info())
+  finally:
+    db.session.close()
+  if error:
+    abort (400)
+  else:
+    return jsonify(body)
+
 @app.route('/lists/<list_id>')
 def get_list_todos(list_id):
-  return render_template('index.html', data=Todo.query.filter_by(list_id=list_id).order_by('id').all())
+  data = Todo.query.filter_by(list_id=list_id).order_by('id').all()
+  lists = lists=TodoList.query.order_by('id').all()
+  active_list = TodoList.query.get(list_id)
+  return render_template('index.html',  data=data, lists=lists, active_list=active_list)
 
 @app.route('/')
 def index():
